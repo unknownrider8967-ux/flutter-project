@@ -27,11 +27,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
     });
   }
 
-  /// Returns the events that fall on [day].
   List<Event> _eventsForDay(List<Event> all, DateTime day) {
     return all.where((e) {
-      final start = DateTime(e.startDate.year, e.startDate.month, e.startDate.day);
-      final end = DateTime(e.endDate.year, e.endDate.month, e.endDate.day);
+      final start = DateTime(
+          e.startDate.year, e.startDate.month, e.startDate.day);
+      final end =
+          DateTime(e.endDate.year, e.endDate.month, e.endDate.day);
       final d = DateTime(day.year, day.month, day.day);
       return !d.isBefore(start) && !d.isAfter(end);
     }).toList();
@@ -39,8 +40,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final eventProvider = context.watch<EventProvider>();
-    final allEvents = eventProvider.events;
+    final allEvents = context.watch<EventProvider>().events;
     final selectedEvents = _selectedDay != null
         ? _eventsForDay(allEvents, _selectedDay!)
         : <Event>[];
@@ -50,6 +50,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         title: const Text('Calendar'),
         elevation: 0,
         backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: false,
       ),
       body: Column(
         children: [
@@ -86,13 +87,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
           ),
           const Divider(height: 1),
-          const SizedBox(height: DesignTokens.spacingS),
           Expanded(
             child: _selectedDay == null
                 ? const Center(
-                    child: Text(
-                      'Select a date to see events',
-                      style: TextStyle(color: DesignTokens.textSecondary),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.touch_app_outlined,
+                            size: 48, color: DesignTokens.textHint),
+                        SizedBox(height: DesignTokens.spacingM),
+                        Text(
+                          'Tap a date to see events',
+                          style:
+                              TextStyle(color: DesignTokens.textSecondary),
+                        ),
+                      ],
                     ),
                   )
                 : selectedEvents.isEmpty
@@ -114,10 +123,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     : ListView.builder(
                         padding: const EdgeInsets.all(DesignTokens.spacingL),
                         itemCount: selectedEvents.length,
-                        itemBuilder: (context, index) {
-                          final event = selectedEvents[index];
-                          return _buildEventCard(context, event);
-                        },
+                        itemBuilder: (context, index) =>
+                            _buildEventCard(context, selectedEvents[index]),
                       ),
           ),
         ],
@@ -126,65 +133,63 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildEventCard(BuildContext context, Event event) {
-    return SyncSphereCard(
-      margin: const EdgeInsets.only(bottom: DesignTokens.spacingM),
-      onTap: () {
-        Navigator.push(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: DesignTokens.spacingM),
+      child: SyncSphereCard(
+        onTap: () => Navigator.push(
           context,
           MaterialPageRoute(
               builder: (_) => EventDetailScreen(event: event)),
-        );
-      },
-      child: Row(
-        children: [
-          Container(
-            width: 4,
-            height: 50,
-            decoration: BoxDecoration(
-              color: event.isActive
-                  ? DesignTokens.success
-                  : DesignTokens.primaryColor,
-              borderRadius: DesignTokens.radiusXL,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: 50,
+              decoration: BoxDecoration(
+                color: event.isActive
+                    ? DesignTokens.success
+                    : DesignTokens.primaryColor,
+                borderRadius: DesignTokens.radiusXL,
+              ),
             ),
-          ),
-          const SizedBox(width: DesignTokens.spacingM),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  event.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: DesignTokens.spacingXS),
-                Text(
-                  '${event.formattedTime} · ${event.location}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: DesignTokens.textSecondary,
+            const SizedBox(width: DesignTokens.spacingM),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(event.name,
+                      style:
+                          const TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: DesignTokens.spacingXS),
+                  Text(
+                    '${event.formattedTime} · ${event.location}',
+                    style: const TextStyle(
+                        fontSize: 12,
+                        color: DesignTokens.textSecondary),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: DesignTokens.spacingS,
-                vertical: DesignTokens.spacingXS),
-            decoration: BoxDecoration(
-              color: DesignTokens.primaryColor.withOpacity(0.1),
-              borderRadius: DesignTokens.radiusS,
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: DesignTokens.spacingS,
+                  vertical: DesignTokens.spacingXS),
+              decoration: BoxDecoration(
+                color: DesignTokens.primaryColor.withOpacity(0.1),
+                borderRadius: DesignTokens.radiusS,
+              ),
+              child: Text(
+                event.category,
+                style: const TextStyle(
+                    fontSize: 10,
+                    color: DesignTokens.primaryColor,
+                    fontWeight: FontWeight.w600),
+              ),
             ),
-            child: Text(
-              event.category,
-              style: const TextStyle(
-                  fontSize: 10,
-                  color: DesignTokens.primaryColor,
-                  fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

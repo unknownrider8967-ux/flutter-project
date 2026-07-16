@@ -6,47 +6,59 @@ class EventProvider extends ChangeNotifier {
   List<Event> _events = [];
   Event? _selectedEvent;
   bool _isLoading = false;
-  
+
   List<Event> get events => _events;
   Event? get selectedEvent => _selectedEvent;
   bool get isLoading => _isLoading;
-  
+
+  void selectEvent(Event event) {
+    _selectedEvent = event;
+    notifyListeners();
+  }
+
   Future<void> loadEvents() async {
     _setLoading(true);
-    
+
     try {
       final db = await DatabaseService.instance.database;
       final results = await db.query(
         'events',
         orderBy: 'start_date ASC',
       );
-      
       _events = results.map((map) => Event.fromMap(map)).toList();
+      // Auto-select the first event if none selected yet
+      if (_selectedEvent == null && _events.isNotEmpty) {
+        _selectedEvent = _events.first;
+      }
+      // Re-sync selectedEvent in case it was updated
+      if (_selectedEvent != null) {
+        final fresh =
+            _events.where((e) => e.id == _selectedEvent!.id).toList();
+        if (fresh.isNotEmpty) _selectedEvent = fresh.first;
+      }
     } catch (e) {
-      // Handle error
+      debugPrint('EventProvider.loadEvents error: $e');
     }
-    
+
     _setLoading(false);
   }
-  
+
   Future<void> createEvent(Event event) async {
     _setLoading(true);
-    
     try {
       final db = await DatabaseService.instance.database;
       final id = await db.insert('events', event.toMap());
       final newEvent = event.copyWith(id: id);
       _events.add(newEvent);
+      _selectedEvent = newEvent;
     } catch (e) {
-      // Handle error
+      debugPrint('EventProvider.createEvent error: $e');
     }
-    
     _setLoading(false);
   }
-  
+
   Future<void> updateEvent(Event event) async {
     _setLoading(true);
-    
     try {
       final db = await DatabaseService.instance.database;
       await db.update(
@@ -55,47 +67,30 @@ class EventProvider extends ChangeNotifier {
         where: 'id = ?',
         whereArgs: [event.id],
       );
-      
       final index = _events.indexWhere((e) => e.id == event.id);
-      if (index != -1) {
-        _events[index] = event;
-      }
+      if (index != -1) _events[index] = event;
+      if (_selectedEvent?.id == event.id) _selectedEvent = event;
     } catch (e) {
-      // Handle error
+      debugPrint('EventProvider.updateEvent error: $e');
     }
-    
     _setLoading(false);
   }
-  
+
   Future<void> deleteEvent(int id) async {
     _setLoading(true);
-    
     try {
       final db = await DatabaseService.instance.database;
-      await db.delete(
-        'events',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
-      
+      await db.delete('events', where: 'id = ?', whereArgs: [id]);
       _events.removeWhere((e) => e.id == id);
+      if (_selectedEvent?.id == id) {
+        _selectedEvent = _events.isNotEmpty ? _events.first : null;
+      }
     } catch (e) {
-      // Handle error
+      debugPrint('EventProvider.deleteEvent error: $e');
     }
-    
     _setLoading(false);
   }
-  
-  void selectEvent(int id) {
-    _selectedEvent = _events.firstWhere((e) => e.id == id);
-    notifyListeners();
-  }
-  
-  void clearSelection() {
-    _selectedEvent = null;
-    notifyListeners();
-  }
-  
+
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();

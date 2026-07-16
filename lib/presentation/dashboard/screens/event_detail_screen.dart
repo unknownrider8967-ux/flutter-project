@@ -8,10 +8,10 @@ import 'package:syncsphere/presentation/dashboard/screens/create_event_screen.da
 import 'package:syncsphere/presentation/guest/screens/guest_list_screen.dart';
 import 'package:syncsphere/presentation/task/screens/task_list_screen.dart';
 import 'package:syncsphere/presentation/budget/screens/budget_screen.dart';
+import 'package:syncsphere/presentation/timeline/screens/timeline_screen.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final Event event;
-
   const EventDetailScreen({super.key, required this.event});
 
   @override
@@ -38,22 +38,19 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             onPressed: () async {
-              final updated = await Navigator.push<bool>(
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (_) => CreateEventScreen(event: _event),
                 ),
               );
-              if (updated == true || mounted) {
-                // Reload event from provider
-                final provider = context.read<EventProvider>();
-                await provider.loadEvents();
-                final fresh = provider.events
-                    .where((e) => e.id == _event.id)
-                    .toList();
-                if (fresh.isNotEmpty && mounted) {
-                  setState(() => _event = fresh.first);
-                }
+              // Reload fresh event data
+              final provider = context.read<EventProvider>();
+              await provider.loadEvents();
+              final fresh =
+                  provider.events.where((e) => e.id == _event.id).toList();
+              if (fresh.isNotEmpty && mounted) {
+                setState(() => _event = fresh.first);
               }
             },
           ),
@@ -77,6 +74,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
+  // ── header ──────────────────────────────────────────────────────────
   Widget _buildEventHeader() {
     Color statusColor;
     switch (_event.status) {
@@ -108,9 +106,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: DesignTokens.spacingS,
-                  vertical: DesignTokens.spacingXS,
-                ),
+                    horizontal: DesignTokens.spacingS,
+                    vertical: DesignTokens.spacingXS),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: DesignTokens.radiusS,
@@ -118,10 +115,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 child: Text(
                   _event.status.toUpperCase(),
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                  ),
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600),
                 ),
               ),
               const Spacer(),
@@ -136,10 +132,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 child: Text(
                   _event.category,
                   style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
+                      color: Colors.white70,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500),
                 ),
               ),
             ],
@@ -148,53 +143,44 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           Text(
             _event.name,
             style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
+                fontSize: 24, fontWeight: FontWeight.w700, color: Colors.white),
           ),
           const SizedBox(height: DesignTokens.spacingS),
-          Row(
-            children: [
-              const Icon(Icons.calendar_today_outlined,
-                  size: 14, color: Colors.white70),
-              const SizedBox(width: DesignTokens.spacingXS),
-              Text(
-                '${_event.formattedStartDate} – ${_event.formattedEndDate}',
-                style: const TextStyle(color: Colors.white70, fontSize: 13),
-              ),
-            ],
-          ),
+          Row(children: [
+            const Icon(Icons.calendar_today_outlined,
+                size: 14, color: Colors.white70),
+            const SizedBox(width: DesignTokens.spacingXS),
+            Text(
+              '${_event.formattedStartDate} – ${_event.formattedEndDate}',
+              style: const TextStyle(color: Colors.white70, fontSize: 13),
+            ),
+          ]),
           const SizedBox(height: DesignTokens.spacingXS),
-          Row(
-            children: [
-              const Icon(Icons.location_on_outlined,
-                  size: 14, color: Colors.white70),
-              const SizedBox(width: DesignTokens.spacingXS),
-              Expanded(
-                child: Text(
-                  _event.location,
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
-                  overflow: TextOverflow.ellipsis,
-                ),
+          Row(children: [
+            const Icon(Icons.location_on_outlined,
+                size: 14, color: Colors.white70),
+            const SizedBox(width: DesignTokens.spacingXS),
+            Expanded(
+              child: Text(
+                _event.location,
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
+                overflow: TextOverflow.ellipsis,
               ),
-            ],
-          ),
+            ),
+          ]),
         ],
       ),
     );
   }
 
+  // ── info card ────────────────────────────────────────────────────────
   Widget _buildEventInfo() {
     return SyncSphereCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'About This Event',
-            style:
-                TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
+          const Text('About This Event',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: DesignTokens.spacingS),
           Text(
             _event.description.isEmpty
@@ -206,21 +192,19 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           const SizedBox(height: DesignTokens.spacingM),
           Row(
             children: [
-              _buildInfoChip(
-                  'Max Guests',
-                  _event.maxGuests?.toString() ?? 'TBD',
-                  Icons.people_outline),
+              _infoChip('Guests',
+                  _event.maxGuests?.toString() ?? 'TBD', Icons.people_outline),
               const SizedBox(width: DesignTokens.spacingM),
-              _buildInfoChip(
+              _infoChip(
                   'Budget',
                   _event.budget != null
                       ? '\$${_event.budget!.toStringAsFixed(0)}'
                       : 'TBD',
                   Icons.attach_money),
               const SizedBox(width: DesignTokens.spacingM),
-              _buildInfoChip(
+              _infoChip(
                   'Duration',
-                  '${_event.durationDays} day${_event.durationDays != 1 ? 's' : ''}',
+                  '${_event.durationDays}d',
                   Icons.schedule_outlined),
             ],
           ),
@@ -229,126 +213,105 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
-  Widget _buildInfoChip(String label, String value, IconData icon) {
+  Widget _infoChip(String label, String value, IconData icon) {
     return Expanded(
       child: Column(
         children: [
           Icon(icon, size: 18, color: DesignTokens.primaryColor),
           const SizedBox(height: DesignTokens.spacingXS),
-          Text(
-            value,
-            style: const TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-          Text(
-            label,
-            style: const TextStyle(
-                fontSize: 11, color: DesignTokens.textHint),
-            textAlign: TextAlign.center,
-          ),
+          Text(value,
+              style: const TextStyle(
+                  fontSize: 16, fontWeight: FontWeight.w600)),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 11, color: DesignTokens.textHint),
+              textAlign: TextAlign.center),
         ],
       ),
     );
   }
 
+  // ── quick actions ────────────────────────────────────────────────────
   Widget _buildQuickActions(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Quick Actions',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
+        const Text('Quick Actions',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
         const SizedBox(height: DesignTokens.spacingM),
         Row(
           children: [
-            Expanded(
-              child: _buildActionTile(
+            _actionTile(context, Icons.people_outline, 'Guests',
+                DesignTokens.primaryColor, () {
+              Navigator.push(
                 context,
-                icon: Icons.people_outline,
-                label: 'Guests',
-                color: DesignTokens.primaryColor,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        GuestListScreen(eventId: _event.id!),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: DesignTokens.spacingM),
-            Expanded(
-              child: _buildActionTile(
+                MaterialPageRoute(
+                    builder: (_) => GuestListScreen(eventId: _event.id!)),
+              );
+            }),
+            const SizedBox(width: DesignTokens.spacingS),
+            _actionTile(context, Icons.assignment_outlined, 'Tasks',
+                DesignTokens.secondaryColor, () {
+              Navigator.push(
                 context,
-                icon: Icons.assignment_outlined,
-                label: 'Tasks',
-                color: DesignTokens.secondaryColor,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        TaskListScreen(eventId: _event.id!),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: DesignTokens.spacingM),
-            Expanded(
-              child: _buildActionTile(
+                MaterialPageRoute(
+                    builder: (_) => TaskListScreen(eventId: _event.id!)),
+              );
+            }),
+            const SizedBox(width: DesignTokens.spacingS),
+            _actionTile(context, Icons.attach_money, 'Budget',
+                DesignTokens.accentColor, () {
+              Navigator.push(
                 context,
-                icon: Icons.attach_money,
-                label: 'Budget',
-                color: DesignTokens.accentColor,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        BudgetScreen(eventId: _event.id!),
-                  ),
-                ),
-              ),
-            ),
+                MaterialPageRoute(
+                    builder: (_) => BudgetScreen(eventId: _event.id!)),
+              );
+            }),
+            const SizedBox(width: DesignTokens.spacingS),
+            _actionTile(context, Icons.timeline_outlined, 'Timeline',
+                DesignTokens.info, () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => TimelineScreen(event: _event)),
+              );
+            }),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildActionTile(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return SyncSphereCard(
-      onTap: onTap,
-      child: Padding(
-        padding:
-            const EdgeInsets.symmetric(vertical: DesignTokens.spacingM),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(DesignTokens.spacingS),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                shape: BoxShape.circle,
+  Widget _actionTile(BuildContext context, IconData icon, String label,
+      Color color, VoidCallback onTap) {
+    return Expanded(
+      child: SyncSphereCard(
+        onTap: onTap,
+        child: Padding(
+          padding:
+              const EdgeInsets.symmetric(vertical: DesignTokens.spacingM),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(DesignTokens.spacingS),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 20),
               ),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(height: DesignTokens.spacingXS),
-            Text(
-              label,
-              style: const TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w500),
-            ),
-          ],
+              const SizedBox(height: DesignTokens.spacingXS),
+              Text(label,
+                  style: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w500)),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // ── delete ───────────────────────────────────────────────────────────
   Widget _buildDeleteButton(BuildContext context) {
     return SyncSphereButton(
       label: 'Delete Event',
@@ -361,12 +324,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           builder: (ctx) => AlertDialog(
             title: const Text('Delete Event'),
             content: const Text(
-                'Are you sure you want to delete this event? This will also remove all associated guests, tasks, and budget entries.'),
+                'This will permanently delete the event and all associated guests, tasks, and budget entries.'),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel'),
-              ),
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel')),
               TextButton(
                 onPressed: () async {
                   Navigator.pop(ctx);
