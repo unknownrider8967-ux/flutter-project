@@ -16,8 +16,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool _isLoading = false;
   bool _isSent = false;
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
   Future<void> _resetPassword() async {
-    if (_emailController.text.isEmpty) {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter your email address.'),
@@ -28,21 +35,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     }
 
     setState(() => _isLoading = true);
-    
+
     try {
-      await context.read<AuthProvider>().resetPassword(_emailController.text.trim());
-      setState(() {
-        _isSent = true;
-        _isLoading = false;
-      });
+      await context.read<AuthProvider>().resetPassword(email);
+      if (mounted) {
+        setState(() {
+          _isSent = true;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: DesignTokens.error,
-        ),
-      );
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: DesignTokens.error,
+          ),
+        );
+      }
     }
   }
 
@@ -67,7 +78,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
             const SizedBox(height: DesignTokens.spacingS),
             Text(
-              'Enter your email address and we\'ll send you a link to reset your password.',
+              'Enter your email address and we\'ll send you a reset link.',
               style: TextStyle(
                 fontSize: 16,
                 color: DesignTokens.textSecondary,
@@ -89,7 +100,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     const SizedBox(width: DesignTokens.spacingM),
                     Expanded(
                       child: Text(
-                        'Password reset link sent to ${_emailController.text}',
+                        'If an account exists for ${_emailController.text}, a reset link has been sent.',
                         style: const TextStyle(color: DesignTokens.success),
                       ),
                     ),
@@ -99,9 +110,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: DesignTokens.spacingL),
               SyncSphereButton(
                 label: 'Back to Sign In',
-                onPressed: () {
-                  Navigator.pop(context);
-                },
+                onPressed: () => Navigator.pop(context),
               ),
             ] else ...[
               SyncSphereInputField(
@@ -117,13 +126,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 isLoading: _isLoading,
               ),
               const SizedBox(height: DesignTokens.spacingM),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text(
-                  'Back to Sign In',
-                  style: TextStyle(color: DesignTokens.textSecondary),
+              Center(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'Back to Sign In',
+                    style: TextStyle(color: DesignTokens.textSecondary),
+                  ),
                 ),
               ),
             ],

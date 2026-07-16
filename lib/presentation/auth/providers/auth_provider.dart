@@ -1,130 +1,152 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:crypto/crypto.dart';
+import 'package:syncsphere/data/models/user_model.dart';
 
 class AuthProvider extends ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
-  
-  User? _user;
+  AppUser? _user;
   bool _isLoading = false;
-  
-  User? get user => _user;
+
+  AppUser? get user => _user;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _user != null;
-  
-  AuthProvider() {
-    _auth.authStateChanges().listen((user) {
-      _user = user;
-      notifyListeners();
-    });
+
+  String _hashPassword(String password) {
+    final bytes = utf8.encode(password);
+    return sha256.convert(bytes).toString();
   }
-  
+
   Future<bool> checkAuthStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
-    
-    if (token != null && _user == null) {
-      _user = _auth.currentUser;
-      if (_user != null) {
-        notifyListeners();
-        return true;
-      }
+    final userId = prefs.getString('current_user_id');
+    if (userId == null) return false;
+
+    final usersJson = prefs.getString('users') ?? '[]';
+    final users = (jsonDecode(usersJson) as List)
+        .map((u) => AppUser.fromMap(u as Map<String, dynamic>))
+        .toList();
+
+    try {
+      _user = users.firstWhere((u) => u.id == userId);
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
     }
-    
-    return _user != null;
   }
-  
+
   Future<bool> login(String email, String password) async {
     _setLoading(true);
-    
     try {
-      final credential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      _user = credential.user;
-      await _saveSession(credential.user?.uid ?? '');
+      final prefs = await SharedPreferences.getInstance();
+      final usersJson = prefs.getString('users') ?? '[]';
+      final rawList = jsonDecode(usersJson) as List;
+      final hash = _hashPassword(password);
+
+      for (final u in rawList) {
+        final map = u as Map<String, dynamic>;
+        if (map['email'] == email && map['passwordHash'] == hash) {
+          _user = AppUser.fromMap(map);
+          await prefs.setString('current_user_id', _user!.id);
+          _setLoading(false);
+          return true;
+        }
+      }
       _setLoading(false);
-      return true;
-    } on FirebaseAuthException catch (e) {
+      return false;
+    } catch (_) {
       _setLoading(false);
       return false;
     }
   }
-  
+
   Future<bool> signUp(String email, String password, String name) async {
     _setLoading(true);
-    
     try {
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      
-      await credential.user?.updateDisplayName(name);
-      _user = credential.user;
-      await _saveSession(credential.user?.uid ?? '');
+      final prefs = await SharedPreferences.getInstance();
+      final usersJson = prefs.getString('users') ?? '[]';
+      final rawList = jsonDecode(usersJson) as List;
+
+      // Check duplicate email
+      for (final u in rawList) {
+        if ((u as Map<String, dynamic>)['email'] == email) {
+          _setLoading(false);
+          return false;
+        }
+      }
+
+      final id = DateTime.now().millisecondsSinceEpoch.toString();
+      final userMap = {
+        'id': id,
+        'name': name,
+        'email': email,
+        'passwordHash': _hashPassword(password),
+      };
+
+      rawList.add(userMap);
+      await prefs.setString('users', jsonEncode(rawList));
+      _user = AppUser(id: id, name: name, email: email);
+      await prefs.setString('current_user_id', id);
       _setLoading(false);
       return true;
-    } on FirebaseAuthException catch (e) {
+    } catch (_) {
       _setLoading(false);
       return false;
     }
   }
-  
+
+  /// Demo sign-in: creates/reuses a guest account.
   Future<bool> signInWithGoogle() async {
     _setLoading(true);
-    
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        _setLoading(false);
-        return false;
+      final prefs = await SharedPreferences.getInstance();
+      const demoEmail = 'demo@syncsphere.app';
+      const demoId = 'demo-google-user';
+      const demoName = 'Demo User';
+
+      final usersJson = prefs.getString('users') ?? '[]';
+      final rawList = jsonDecode(usersJson) as List;
+
+      final exists = rawList.any(
+          (u) => (u as Map<String, dynamic>)['id'] == demoId);
+
+      if (!exists) {
+        rawList.add({
+          'id': demoId,
+          'name': demoName,
+          'email': demoEmail,
+          'passwordHash': '',
+        });
+        await prefs.setString('users', jsonEncode(rawList));
       }
-      
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-      
-      final userCredential = await _auth.signInWithCredential(credential);
-      _user = userCredential.user;
-      await _saveSession(userCredential.user?.uid ?? '');
+
+      _user = AppUser(id: demoId, name: demoName, email: demoEmail);
+      await prefs.setString('current_user_id', demoId);
       _setLoading(false);
       return true;
-    } catch (e) {
+    } catch (_) {
       _setLoading(false);
       return false;
     }
   }
-  
+
   Future<void> logout() async {
-    await _auth.signOut();
-    await _googleSignIn.signOut();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('current_user_id');
     _user = null;
-    await _clearSession();
     notifyListeners();
   }
-  
-  Future<void> resetPassword(String email) async {
-    await _auth.sendPasswordResetEmail(email: email);
-  }
-  
-  Future<void> _saveSession(String userId) async {
+
+  Future<bool> resetPassword(String email) async {
+    // In a local-only app we just confirm the email exists.
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', userId);
+    final usersJson = prefs.getString('users') ?? '[]';
+    final rawList = jsonDecode(usersJson) as List;
+    return rawList
+        .any((u) => (u as Map<String, dynamic>)['email'] == email);
   }
-  
-  Future<void> _clearSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
-  }
-  
+
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();

@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'core/theme/design_tokens.dart';
 import 'core/theme/theme_provider.dart';
 import 'data/services/database_service.dart';
@@ -16,6 +18,11 @@ import 'presentation/dashboard/screens/dashboard_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // sqflite_common_ffi is required on Linux and Windows desktop.
+  if (Platform.isLinux || Platform.isWindows) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
   await DatabaseService.instance.initialize();
   await SeedService.instance.seedIfNeeded();
   runApp(const SyncSphereApp());

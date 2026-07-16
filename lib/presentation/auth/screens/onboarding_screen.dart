@@ -14,26 +14,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<OnboardingPage> _pages = const [
-    OnboardingPage(
+  final List<_OnboardingPage> _pages = const [
+    _OnboardingPage(
       title: 'Plan Together',
-      description: 'Collaborate with your team in real-time. Assign tasks, track progress, and keep everyone aligned.',
+      description:
+          'Collaborate with your team in real-time. Assign tasks, track progress, and keep everyone aligned.',
       icon: Icons.people_outline,
       color: DesignTokens.primaryColor,
     ),
-    OnboardingPage(
+    _OnboardingPage(
       title: 'All in One Place',
-      description: 'From guest lists to budget tracking, manage every aspect of your event from a single workspace.',
+      description:
+          'From guest lists to budget tracking, manage every aspect of your event from a single workspace.',
       icon: Icons.dashboard_outlined,
       color: DesignTokens.secondaryColor,
     ),
-    OnboardingPage(
+    _OnboardingPage(
       title: 'Stay Organized',
-      description: 'Never miss a deadline with smart reminders, calendar integration, and real-time updates.',
+      description:
+          'Never miss a deadline with smart reminders, calendar integration, and real-time updates.',
       icon: Icons.calendar_month_outlined,
       color: DesignTokens.accentColor,
     ),
   ];
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,9 +56,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 _currentPage = index;
               });
             },
-            children: _pages.map((page) {
-              return _buildPage(page);
-            }).toList(),
+            children: _pages.map(_buildPage).toList(),
           ),
           Positioned(
             bottom: 0,
@@ -58,7 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Container(
               padding: const EdgeInsets.all(DesignTokens.spacingL),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).scaffoldBackgroundColor,
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
@@ -73,7 +80,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
                       _pages.length,
-                      (index) => Container(
+                      (index) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
                         margin: const EdgeInsets.symmetric(horizontal: 4),
                         width: _currentPage == index ? 24 : 8,
                         height: 8,
@@ -96,8 +104,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           curve: Curves.easeInOut,
                         );
                       },
-                    ),
-                  if (_currentPage == _pages.length - 1)
+                    )
+                  else
                     SyncSphereButton(
                       label: 'Get Started',
                       onPressed: () {
@@ -121,9 +129,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     },
                     child: const Text(
                       'Skip',
-                      style: TextStyle(
-                        color: DesignTokens.textSecondary,
-                      ),
+                      style: TextStyle(color: DesignTokens.textSecondary),
                     ),
                   ),
                 ],
@@ -135,33 +141,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-Widget _buildPage(OnboardingPage page) {
-  return Container(
-    color: Colors.white,
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 160,
-          height: 160,
-          decoration: BoxDecoration(
-            color: page.color.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: ClipOval(
-            child: Image.asset(
-              'assets/images/logo.png',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Icon(
-                  page.icon,
-                  size: 80,
-                  color: page.color,
-                );
-              },
+  Widget _buildPage(_OnboardingPage page) {
+    return Container(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      padding: const EdgeInsets.symmetric(
+          horizontal: DesignTokens.spacingXL,
+          vertical: DesignTokens.spacingXXL),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 160,
+            height: 160,
+            decoration: BoxDecoration(
+              color: page.color.withOpacity(0.1),
+              shape: BoxShape.circle,
             ),
+            child: Icon(page.icon, size: 80, color: page.color),
           ),
-        ),
           const SizedBox(height: DesignTokens.spacingXL),
           Text(
             page.title,
@@ -173,17 +170,14 @@ Widget _buildPage(OnboardingPage page) {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: DesignTokens.spacingM),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spacingL),
-            child: Text(
-              page.description,
-              style: const TextStyle(
-                fontSize: 16,
-                color: DesignTokens.textSecondary,
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
+          Text(
+            page.description,
+            style: const TextStyle(
+              fontSize: 16,
+              color: DesignTokens.textSecondary,
+              height: 1.5,
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -191,13 +185,13 @@ Widget _buildPage(OnboardingPage page) {
   }
 }
 
-class OnboardingPage {
+class _OnboardingPage {
   final String title;
   final String description;
   final IconData icon;
   final Color color;
 
-  const OnboardingPage({
+  const _OnboardingPage({
     required this.title,
     required this.description,
     required this.icon,

@@ -1,0 +1,2 @@
+- [Flutter Linux SQLite setup](flutter-linux-sqlite.md) — sqflite_common_ffi + sqlite Nix package required for Linux desktop; ATK/GSettings warnings are harmless.
+- [Auth approach](auth-approach.md) — Firebase removed; local auth via SharedPreferences + SHA-256 (crypto package); AppUser model in lib/data/models/user_model.dart.

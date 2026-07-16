@@ -21,10 +21,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _checkAuth() async {
     await Future.delayed(const Duration(seconds: 2));
-    
+
     final authProvider = context.read<AuthProvider>();
     final isAuthenticated = await authProvider.checkAuthStatus();
-    
+
     if (mounted) {
       if (isAuthenticated) {
         Navigator.pushReplacement(
@@ -44,7 +44,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -54,27 +54,13 @@ class _SplashScreenState extends State<SplashScreen> {
             ],
           ),
         ),
-        child: Center(
+        child: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // 🔴 REPLACE THIS SECTION with your logo
-              Container(
-                width: 150,
-                height: 150,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/images/logo.png',  // ← Your logo
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              const SizedBox(height: DesignTokens.spacingL),
-              const Text(
+              Icon(Icons.event_note, size: 80, color: Colors.white),
+              SizedBox(height: DesignTokens.spacingL),
+              Text(
                 'SyncSphere',
                 style: TextStyle(
                   fontSize: 32,
@@ -83,16 +69,16 @@ class _SplashScreenState extends State<SplashScreen> {
                   letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: DesignTokens.spacingS),
-              const Text(
+              SizedBox(height: DesignTokens.spacingS),
+              Text(
                 'Collaborative Event Planning',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.white70,
                 ),
               ),
-              const SizedBox(height: DesignTokens.spacingXL),
-              const CircularProgressIndicator(
+              SizedBox(height: DesignTokens.spacingXXL),
+              CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
             ],

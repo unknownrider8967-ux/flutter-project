@@ -7,8 +7,9 @@ import 'package:syncsphere/presentation/budget/providers/budget_provider.dart';
 
 class AddEditBudgetScreen extends StatefulWidget {
   final BudgetEntry? entry;
-  
-  const AddEditBudgetScreen({super.key, this.entry});
+  final int eventId;
+
+  const AddEditBudgetScreen({super.key, this.entry, required this.eventId});
 
   @override
   State<AddEditBudgetScreen> createState() => _AddEditBudgetScreenState();
@@ -20,28 +21,41 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
   final _paidByController = TextEditingController();
-  
+
   bool _isIncome = false;
   DateTime _date = DateTime.now();
+  bool _isLoading = false;
+
+  bool get _isEditing => widget.entry != null;
 
   @override
   void initState() {
     super.initState();
-    if (widget.entry != null) {
-      _categoryController.text = widget.entry!.category;
-      _descriptionController.text = widget.entry!.description;
-      _amountController.text = widget.entry!.amount.toString();
-      _isIncome = widget.entry!.isIncome;
-      _date = widget.entry!.date;
-      _paidByController.text = widget.entry!.paidBy ?? '';
+    if (_isEditing) {
+      final e = widget.entry!;
+      _categoryController.text = e.category;
+      _descriptionController.text = e.description;
+      _amountController.text = e.amount.toStringAsFixed(2);
+      _isIncome = e.isIncome;
+      _date = e.date;
+      _paidByController.text = e.paidBy ?? '';
     }
+  }
+
+  @override
+  void dispose() {
+    _categoryController.dispose();
+    _descriptionController.dispose();
+    _amountController.dispose();
+    _paidByController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.entry == null ? 'Add Budget Entry' : 'Edit Budget Entry'),
+        title: Text(_isEditing ? 'Edit Entry' : 'Add Budget Entry'),
         elevation: 0,
         backgroundColor: Colors.transparent,
       ),
@@ -50,10 +64,97 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Income / Expense toggle
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _isIncome = false),
+                      child: Container(
+                        padding: const EdgeInsets.all(DesignTokens.spacingM),
+                        decoration: BoxDecoration(
+                          color: !_isIncome
+                              ? DesignTokens.error.withOpacity(0.1)
+                              : DesignTokens.surfaceVariant,
+                          borderRadius: const BorderRadius.horizontal(
+                              left: Radius.circular(12)),
+                          border: Border.all(
+                            color: !_isIncome
+                                ? DesignTokens.error
+                                : Colors.transparent,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.arrow_upward,
+                                color: !_isIncome
+                                    ? DesignTokens.error
+                                    : DesignTokens.textHint,
+                                size: 18),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Expense',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: !_isIncome
+                                    ? DesignTokens.error
+                                    : DesignTokens.textHint,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _isIncome = true),
+                      child: Container(
+                        padding: const EdgeInsets.all(DesignTokens.spacingM),
+                        decoration: BoxDecoration(
+                          color: _isIncome
+                              ? DesignTokens.success.withOpacity(0.1)
+                              : DesignTokens.surfaceVariant,
+                          borderRadius: const BorderRadius.horizontal(
+                              right: Radius.circular(12)),
+                          border: Border.all(
+                            color: _isIncome
+                                ? DesignTokens.success
+                                : Colors.transparent,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.arrow_downward,
+                                color: _isIncome
+                                    ? DesignTokens.success
+                                    : DesignTokens.textHint,
+                                size: 18),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Income',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: _isIncome
+                                    ? DesignTokens.success
+                                    : DesignTokens.textHint,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: DesignTokens.spacingL),
               SyncSphereInputField(
                 label: 'Category',
-                hint: 'e.g., Venue, Catering',
+                hint: 'e.g., Venue, Catering, Marketing',
                 controller: _categoryController,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -65,15 +166,16 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
               const SizedBox(height: DesignTokens.spacingM),
               SyncSphereInputField(
                 label: 'Description',
-                hint: 'Describe the expense/income',
+                hint: 'Brief description of the entry',
                 controller: _descriptionController,
+                maxLines: 2,
               ),
               const SizedBox(height: DesignTokens.spacingM),
               SyncSphereInputField(
-                label: 'Amount',
-                hint: 'Enter amount',
+                label: 'Amount (\$)',
+                hint: '0.00',
                 controller: _amountController,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Amount is required';
@@ -81,25 +183,16 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
                   if (double.tryParse(value) == null) {
                     return 'Enter a valid number';
                   }
+                  if (double.parse(value) <= 0) {
+                    return 'Amount must be greater than 0';
+                  }
                   return null;
                 },
               ),
               const SizedBox(height: DesignTokens.spacingM),
-              SwitchListTile(
-                title: const Text('Income'),
-                subtitle: const Text('Toggle to switch between income and expense'),
-                value: _isIncome,
-                onChanged: (value) {
-                  setState(() {
-                    _isIncome = value;
-                  });
-                },
-                activeColor: DesignTokens.success,
-              ),
-              const SizedBox(height: DesignTokens.spacingM),
               SyncSphereInputField(
                 label: 'Paid By',
-                hint: 'Who paid for this?',
+                hint: 'Who paid for this? (optional)',
                 controller: _paidByController,
               ),
               const SizedBox(height: DesignTokens.spacingM),
@@ -113,26 +206,26 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
                     borderRadius: DesignTokens.radiusM,
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      const Icon(Icons.calendar_today_outlined,
+                          color: DesignTokens.textHint, size: 20),
+                      const SizedBox(width: DesignTokens.spacingM),
                       Text(
                         'Date: ${_date.day}/${_date.month}/${_date.year}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: const TextStyle(fontWeight: FontWeight.w500),
                       ),
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        color: DesignTokens.textHint,
-                      ),
+                      const Spacer(),
+                      const Icon(Icons.chevron_right,
+                          color: DesignTokens.textHint),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: DesignTokens.spacingXL),
               SyncSphereButton(
-                label: widget.entry == null ? 'Add Entry' : 'Update Entry',
+                label: _isEditing ? 'Update Entry' : 'Add Entry',
                 onPressed: _saveEntry,
+                isLoading: _isLoading,
               ),
             ],
           ),
@@ -148,20 +241,17 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    
-    if (date != null) {
-      setState(() {
-        _date = date;
-      });
-    }
+    if (date != null) setState(() => _date = date);
   }
 
-  void _saveEntry() async {
+  Future<void> _saveEntry() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
+    setState(() => _isLoading = true);
+
     final entry = BudgetEntry(
       id: widget.entry?.id,
-      eventId: 1,
+      eventId: widget.eventId,
       category: _categoryController.text.trim(),
       description: _descriptionController.text.trim(),
       amount: double.parse(_amountController.text.trim()),
@@ -171,18 +261,20 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
           ? null
           : _paidByController.text.trim(),
     );
-    
-    if (widget.entry == null) {
-      await context.read<BudgetProvider>().addBudgetEntry(entry);
-    } else {
+
+    if (_isEditing) {
       await context.read<BudgetProvider>().updateBudgetEntry(entry);
+    } else {
+      await context.read<BudgetProvider>().addBudgetEntry(entry);
     }
-    
+
+    setState(() => _isLoading = false);
+
     if (mounted) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(widget.entry == null ? 'Entry added!' : 'Entry updated!'),
+          content: Text(_isEditing ? 'Entry updated!' : 'Entry added!'),
           backgroundColor: DesignTokens.success,
         ),
       );

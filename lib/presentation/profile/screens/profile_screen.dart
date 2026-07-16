@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:syncsphere/core/theme/design_tokens.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:syncsphere/core/theme/theme_provider.dart';
 import 'package:syncsphere/core/widgets/reusable_widgets.dart';
+import 'package:syncsphere/data/models/user_model.dart';
 import 'package:syncsphere/presentation/auth/providers/auth_provider.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -12,13 +12,14 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
-    final user = authProvider.user;
+    final AppUser? user = authProvider.user;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
         elevation: 0,
         backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(DesignTokens.spacingL),
@@ -28,24 +29,13 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: DesignTokens.spacingL),
             _buildSettingsSection(context),
             const SizedBox(height: DesignTokens.spacingL),
-            // 🔴 ADD APP LOGO AT BOTTOM
-            Center(
-              child: Image.asset(
-                'assets/images/logo.png',
-                height: 40,
-                width: 40,
-                color: DesignTokens.textHint.withOpacity(0.3),
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(
-                    Icons.event_note,
-                    size: 40,
-                    color: DesignTokens.textHint.withOpacity(0.3),
-                  );
-                },
-              ),
+            const Icon(
+              Icons.event_note,
+              size: 40,
+              color: DesignTokens.textHint,
             ),
-            const SizedBox(height: DesignTokens.spacingM),
-            Text(
+            const SizedBox(height: DesignTokens.spacingXS),
+            const Text(
               'SyncSphere v1.0.0',
               style: TextStyle(
                 fontSize: 12,
@@ -70,11 +60,15 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context, User? user) {
+  Widget _buildProfileHeader(BuildContext context, AppUser? user) {
+    final initials = user?.name.isNotEmpty == true
+        ? user!.name[0].toUpperCase()
+        : 'U';
+
     return Container(
       padding: const EdgeInsets.all(DesignTokens.spacingL),
       decoration: BoxDecoration(
-        color: DesignTokens.surface,
+        color: Theme.of(context).cardColor,
         borderRadius: DesignTokens.radiusL,
         boxShadow: DesignTokens.shadowMedium,
       ),
@@ -83,57 +77,24 @@ class ProfileScreen extends StatelessWidget {
           CircleAvatar(
             radius: 50,
             backgroundColor: DesignTokens.primaryColor.withOpacity(0.1),
-            // 🔴 USE LOGO AS DEFAULT AVATAR
-            child: user?.photoURL != null
-                ? ClipOval(
-                    child: Image.network(
-                      user!.photoURL!,
-                      fit: BoxFit.cover,
-                      width: 100,
-                      height: 100,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Image.asset(
-                          'assets/images/logo.png',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Text(
-                              user.displayName?.substring(0, 1).toUpperCase() ?? 'U',
-                              style: const TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.w600,
-                                color: DesignTokens.primaryColor,
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  )
-                : Image.asset(
-                    'assets/images/logo.png',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Text(
-                        user?.displayName?.substring(0, 1).toUpperCase() ?? 'U',
-                        style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w600,
-                          color: DesignTokens.primaryColor,
-                        ),
-                      );
-                    },
-                  ),
+            child: Text(
+              initials,
+              style: const TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.w700,
+                color: DesignTokens.primaryColor,
+              ),
+            ),
           ),
           const SizedBox(height: DesignTokens.spacingM),
           Text(
-            user?.displayName ?? 'User',
+            user?.name ?? 'Guest User',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
+          const SizedBox(height: DesignTokens.spacingXS),
           Text(
             user?.email ?? 'No email',
-            style: TextStyle(
-              color: DesignTokens.textSecondary,
-            ),
+            style: const TextStyle(color: DesignTokens.textSecondary),
           ),
         ],
       ),
@@ -142,10 +103,10 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildSettingsSection(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Container(
       decoration: BoxDecoration(
-        color: DesignTokens.surface,
+        color: Theme.of(context).cardColor,
         borderRadius: DesignTokens.radiusL,
         boxShadow: DesignTokens.shadowSmall,
       ),
@@ -169,34 +130,42 @@ class ProfileScreen extends StatelessWidget {
           ),
           _buildDivider(),
           _buildSettingTile(
-            icon: Icons.color_lens_outlined,
+            icon: themeProvider.themeMode == ThemeMode.light
+                ? Icons.light_mode_outlined
+                : Icons.dark_mode_outlined,
             label: 'Theme',
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  themeProvider.themeMode == ThemeMode.light
-                      ? Icons.light_mode
-                      : Icons.dark_mode,
-                  size: 20,
-                  color: DesignTokens.textSecondary,
-                ),
-                const SizedBox(width: DesignTokens.spacingS),
                 Text(
-                  themeProvider.themeMode == ThemeMode.light ? 'Light' : 'Dark',
+                  themeProvider.themeMode == ThemeMode.light
+                      ? 'Light'
+                      : 'Dark',
                   style: const TextStyle(color: DesignTokens.textSecondary),
+                ),
+                const SizedBox(width: DesignTokens.spacingXS),
+                Switch(
+                  value: themeProvider.themeMode == ThemeMode.dark,
+                  onChanged: (_) => themeProvider.toggleTheme(),
+                  activeColor: DesignTokens.primaryColor,
                 ),
               ],
             ),
-            onTap: () {
-              themeProvider.toggleTheme();
-            },
+            onTap: () => themeProvider.toggleTheme(),
           ),
           _buildDivider(),
           _buildSettingTile(
             icon: Icons.info_outline,
             label: 'About SyncSphere',
-            onTap: () {},
+            onTap: () {
+              showAboutDialog(
+                context: context,
+                applicationName: 'SyncSphere',
+                applicationVersion: '1.0.0',
+                applicationLegalese:
+                    '© 2024 SyncSphere. Collaborative Event Planning.',
+              );
+            },
           ),
           _buildDivider(),
           _buildSettingTile(
@@ -224,9 +193,6 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildDivider() {
-    return Divider(
-      height: 1,
-      color: DesignTokens.surfaceVariant,
-    );
+    return const Divider(height: 1, color: DesignTokens.surfaceVariant);
   }
 }

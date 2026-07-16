@@ -7,8 +7,13 @@ import 'package:syncsphere/presentation/guest/providers/guest_provider.dart';
 
 class AddEditGuestScreen extends StatefulWidget {
   final Guest? guest;
-  
-  const AddEditGuestScreen({super.key, this.guest});
+  final int eventId;
+
+  const AddEditGuestScreen({
+    super.key,
+    this.guest,
+    required this.eventId,
+  });
 
   @override
   State<AddEditGuestScreen> createState() => _AddEditGuestScreenState();
@@ -21,29 +26,43 @@ class _AddEditGuestScreenState extends State<AddEditGuestScreen> {
   final _phoneController = TextEditingController();
   final _dietaryController = TextEditingController();
   final _notesController = TextEditingController();
-  
+
   String _rsvpStatus = 'pending';
   bool _isPlusOne = false;
+  bool _isLoading = false;
+
+  bool get _isEditing => widget.guest != null;
 
   @override
   void initState() {
     super.initState();
-    if (widget.guest != null) {
-      _nameController.text = widget.guest!.name;
-      _emailController.text = widget.guest!.email;
-      _phoneController.text = widget.guest!.phone;
-      _rsvpStatus = widget.guest!.rsvpStatus;
-      _isPlusOne = widget.guest!.isPlusOne;
-      _dietaryController.text = widget.guest!.dietaryRestrictions ?? '';
-      _notesController.text = widget.guest!.notes ?? '';
+    if (_isEditing) {
+      final g = widget.guest!;
+      _nameController.text = g.name;
+      _emailController.text = g.email;
+      _phoneController.text = g.phone;
+      _rsvpStatus = g.rsvpStatus;
+      _isPlusOne = g.isPlusOne;
+      _dietaryController.text = g.dietaryRestrictions ?? '';
+      _notesController.text = g.notes ?? '';
     }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _dietaryController.dispose();
+    _notesController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.guest == null ? 'Add Guest' : 'Edit Guest'),
+        title: Text(_isEditing ? 'Edit Guest' : 'Add Guest'),
         elevation: 0,
         backgroundColor: Colors.transparent,
       ),
@@ -96,32 +115,30 @@ class _AddEditGuestScreenState extends State<AddEditGuestScreen> {
                 value: _rsvpStatus,
                 items: const [
                   DropdownMenuItem(value: 'pending', child: Text('Pending')),
-                  DropdownMenuItem(value: 'confirmed', child: Text('Confirmed')),
+                  DropdownMenuItem(
+                      value: 'confirmed', child: Text('Confirmed')),
                   DropdownMenuItem(value: 'maybe', child: Text('Maybe')),
                   DropdownMenuItem(value: 'declined', child: Text('Declined')),
                 ],
                 onChanged: (value) {
-                  setState(() {
-                    _rsvpStatus = value!;
-                  });
+                  setState(() => _rsvpStatus = value!);
                 },
               ),
               const SizedBox(height: DesignTokens.spacingM),
               SwitchListTile(
-                title: const Text('Plus One'),
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Brings a +1'),
                 subtitle: const Text('Allow guest to bring a plus one'),
                 value: _isPlusOne,
                 onChanged: (value) {
-                  setState(() {
-                    _isPlusOne = value;
-                  });
+                  setState(() => _isPlusOne = value);
                 },
                 activeColor: DesignTokens.primaryColor,
               ),
-              const SizedBox(height: DesignTokens.spacingM),
+              const SizedBox(height: DesignTokens.spacingS),
               SyncSphereInputField(
                 label: 'Dietary Restrictions',
-                hint: 'Any dietary requirements?',
+                hint: 'e.g., Vegetarian, Gluten-free',
                 controller: _dietaryController,
               ),
               const SizedBox(height: DesignTokens.spacingM),
@@ -133,8 +150,9 @@ class _AddEditGuestScreenState extends State<AddEditGuestScreen> {
               ),
               const SizedBox(height: DesignTokens.spacingXL),
               SyncSphereButton(
-                label: widget.guest == null ? 'Add Guest' : 'Update Guest',
+                label: _isEditing ? 'Update Guest' : 'Add Guest',
                 onPressed: _saveGuest,
+                isLoading: _isLoading,
               ),
             ],
           ),
@@ -143,32 +161,41 @@ class _AddEditGuestScreenState extends State<AddEditGuestScreen> {
     );
   }
 
-  void _saveGuest() async {
+  Future<void> _saveGuest() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
+    setState(() => _isLoading = true);
+
     final guest = Guest(
       id: widget.guest?.id,
-      eventId: 1,
+      eventId: widget.eventId,
       name: _nameController.text.trim(),
       email: _emailController.text.trim(),
       phone: _phoneController.text.trim(),
       rsvpStatus: _rsvpStatus,
       isPlusOne: _isPlusOne,
-      dietaryRestrictions: _dietaryController.text.trim(),
-      notes: _notesController.text.trim(),
+      dietaryRestrictions: _dietaryController.text.trim().isEmpty
+          ? null
+          : _dietaryController.text.trim(),
+      notes: _notesController.text.trim().isEmpty
+          ? null
+          : _notesController.text.trim(),
     );
-    
-    if (widget.guest == null) {
-      await context.read<GuestProvider>().addGuest(guest);
-    } else {
+
+    if (_isEditing) {
       await context.read<GuestProvider>().updateGuest(guest);
+    } else {
+      await context.read<GuestProvider>().addGuest(guest);
     }
-    
+
+    setState(() => _isLoading = false);
+
     if (mounted) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(widget.guest == null ? 'Guest added!' : 'Guest updated!'),
+          content:
+              Text(_isEditing ? 'Guest updated!' : 'Guest added!'),
           backgroundColor: DesignTokens.success,
         ),
       );

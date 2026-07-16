@@ -7,8 +7,9 @@ import 'package:syncsphere/presentation/task/providers/task_provider.dart';
 
 class AddEditTaskScreen extends StatefulWidget {
   final Task? task;
-  
-  const AddEditTaskScreen({super.key, this.task});
+  final int eventId;
+
+  const AddEditTaskScreen({super.key, this.task, required this.eventId});
 
   @override
   State<AddEditTaskScreen> createState() => _AddEditTaskScreenState();
@@ -19,29 +20,41 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _assignedToController = TextEditingController();
-  
+
   String _priority = 'medium';
   String _status = 'todo';
   DateTime? _dueDate;
+  bool _isLoading = false;
+
+  bool get _isEditing => widget.task != null;
 
   @override
   void initState() {
     super.initState();
-    if (widget.task != null) {
-      _titleController.text = widget.task!.title;
-      _descriptionController.text = widget.task!.description;
-      _priority = widget.task!.priority;
-      _status = widget.task!.status;
-      _assignedToController.text = widget.task!.assignedTo ?? '';
-      _dueDate = widget.task!.dueDate;
+    if (_isEditing) {
+      final t = widget.task!;
+      _titleController.text = t.title;
+      _descriptionController.text = t.description;
+      _priority = t.priority;
+      _status = t.status;
+      _assignedToController.text = t.assignedTo ?? '';
+      _dueDate = t.dueDate;
     }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _assignedToController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.task == null ? 'Add Task' : 'Edit Task'),
+        title: Text(_isEditing ? 'Edit Task' : 'Add Task'),
         elevation: 0,
         backgroundColor: Colors.transparent,
       ),
@@ -81,11 +94,7 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
                   DropdownMenuItem(value: 'medium', child: Text('Medium')),
                   DropdownMenuItem(value: 'high', child: Text('High')),
                 ],
-                onChanged: (value) {
-                  setState(() {
-                    _priority = value!;
-                  });
-                },
+                onChanged: (value) => setState(() => _priority = value!),
               ),
               const SizedBox(height: DesignTokens.spacingM),
               DropdownButtonFormField<String>(
@@ -96,15 +105,12 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
                 value: _status,
                 items: const [
                   DropdownMenuItem(value: 'todo', child: Text('To Do')),
-                  DropdownMenuItem(value: 'in_progress', child: Text('In Progress')),
+                  DropdownMenuItem(
+                      value: 'in_progress', child: Text('In Progress')),
                   DropdownMenuItem(value: 'review', child: Text('Review')),
                   DropdownMenuItem(value: 'done', child: Text('Done')),
                 ],
-                onChanged: (value) {
-                  setState(() {
-                    _status = value!;
-                  });
-                },
+                onChanged: (value) => setState(() => _status = value!),
               ),
               const SizedBox(height: DesignTokens.spacingM),
               SyncSphereInputField(
@@ -123,30 +129,36 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
                     borderRadius: DesignTokens.radiusM,
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      const Icon(Icons.calendar_today_outlined,
+                          color: DesignTokens.textHint, size: 20),
+                      const SizedBox(width: DesignTokens.spacingM),
                       Text(
                         _dueDate != null
                             ? 'Due: ${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}'
-                            : 'Select Due Date',
+                            : 'Select Due Date (optional)',
                         style: TextStyle(
                           color: _dueDate != null
                               ? DesignTokens.textPrimary
                               : DesignTokens.textHint,
                         ),
                       ),
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        color: DesignTokens.textHint,
-                      ),
+                      const Spacer(),
+                      if (_dueDate != null)
+                        GestureDetector(
+                          onTap: () => setState(() => _dueDate = null),
+                          child: const Icon(Icons.close,
+                              size: 18, color: DesignTokens.textHint),
+                        ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: DesignTokens.spacingXL),
               SyncSphereButton(
-                label: widget.task == null ? 'Add Task' : 'Update Task',
+                label: _isEditing ? 'Update Task' : 'Add Task',
                 onPressed: _saveTask,
+                isLoading: _isLoading,
               ),
             ],
           ),
@@ -162,20 +174,17 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    
-    if (date != null) {
-      setState(() {
-        _dueDate = date;
-      });
-    }
+    if (date != null) setState(() => _dueDate = date);
   }
 
-  void _saveTask() async {
+  Future<void> _saveTask() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
+    setState(() => _isLoading = true);
+
     final task = Task(
       id: widget.task?.id,
-      eventId: 1,
+      eventId: widget.eventId,
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       priority: _priority,
@@ -185,18 +194,20 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
           : _assignedToController.text.trim(),
       dueDate: _dueDate,
     );
-    
-    if (widget.task == null) {
-      await context.read<TaskProvider>().addTask(task);
-    } else {
+
+    if (_isEditing) {
       await context.read<TaskProvider>().updateTask(task);
+    } else {
+      await context.read<TaskProvider>().addTask(task);
     }
-    
+
+    setState(() => _isLoading = false);
+
     if (mounted) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(widget.task == null ? 'Task added!' : 'Task updated!'),
+          content: Text(_isEditing ? 'Task updated!' : 'Task added!'),
           backgroundColor: DesignTokens.success,
         ),
       );
