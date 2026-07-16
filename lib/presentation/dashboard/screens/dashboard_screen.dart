@@ -78,7 +78,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   MaterialPageRoute(
                       builder: (_) => const CreateEventScreen()),
                 );
-                if (mounted) context.read<EventProvider>().loadEvents();
+                if (context.mounted) context.read<EventProvider>().loadEvents();
               },
               backgroundColor: DesignTokens.primaryColor,
               child: const Icon(Icons.add, color: Colors.white),
@@ -155,12 +155,17 @@ class _HomeTab extends StatelessWidget {
                             'Create your first event to get started.',
                         icon: Icons.event_available_outlined,
                         actionLabel: 'Create Event',
-                        onActionPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const CreateEventScreen()),
-                        ).then((_) =>
-                            context.read<EventProvider>().loadEvents()),
+                        onActionPressed: () {
+                          final provider = context.read<EventProvider>();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const CreateEventScreen()),
+                          ).then((_) {
+                            if (!context.mounted) return;
+                            provider.loadEvents();
+                          });
+                        },
                       )
                     else
                       ...events.map((e) => _EventCard(event: e)),
@@ -209,7 +214,7 @@ class _StatChip extends StatelessWidget {
             vertical: DesignTokens.spacingM,
             horizontal: DesignTokens.spacingS),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: DesignTokens.radiusM,
         ),
         child: Column(
@@ -255,12 +260,16 @@ class _EventCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: DesignTokens.spacingM),
       child: SyncSphereCard(
         onTap: () {
-          context.read<EventProvider>().selectEvent(event);
+          final provider = context.read<EventProvider>();
+          provider.selectEvent(event);
           Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (_) => EventDetailScreen(event: event)),
-          ).then((_) => context.read<EventProvider>().loadEvents());
+          ).then((_) {
+            if (!context.mounted) return;
+            provider.loadEvents();
+          });
         },
         child: Row(
           children: [
@@ -290,7 +299,7 @@ class _EventCard extends StatelessWidget {
                             horizontal: DesignTokens.spacingS,
                             vertical: 2),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.1),
+                          color: statusColor.withValues(alpha: 0.1),
                           borderRadius: DesignTokens.radiusS,
                         ),
                         child: Text(

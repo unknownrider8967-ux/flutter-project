@@ -88,7 +88,7 @@ class DesignTokens {
   
   static List<BoxShadow> shadowSmall = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.05),
+      color: Colors.black.withValues(alpha: 0.05),
       blurRadius: 8,
       offset: const Offset(0, 2),
     ),
@@ -96,7 +96,7 @@ class DesignTokens {
   
   static List<BoxShadow> shadowMedium = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.08),
+      color: Colors.black.withValues(alpha: 0.08),
       blurRadius: 16,
       offset: const Offset(0, 4),
     ),
@@ -104,7 +104,7 @@ class DesignTokens {
   
   static List<BoxShadow> shadowLarge = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.12),
+      color: Colors.black.withValues(alpha: 0.12),
       blurRadius: 24,
       offset: const Offset(0, 8),
     ),
@@ -121,7 +121,6 @@ extension ThemeExtension on ThemeData {
         secondary: DesignTokens.secondaryColor,
         error: DesignTokens.error,
         surface: DesignTokens.surface,
-        background: DesignTokens.background,
       ),
       textTheme: const TextTheme(
         displayLarge: DesignTokens.headline1,
@@ -133,9 +132,8 @@ extension ThemeExtension on ThemeData {
         bodySmall: DesignTokens.caption,
         labelLarge: DesignTokens.button,
       ),
-      // Card theme omitted to avoid SDK type mismatches; set cardColor instead
       cardColor: DesignTokens.surface,
-      inputDecorationTheme: InputDecorationTheme(
+      inputDecorationTheme: const InputDecorationTheme(
         filled: true,
         fillColor: DesignTokens.surfaceVariant,
         border: OutlineInputBorder(
@@ -148,13 +146,13 @@ extension ThemeExtension on ThemeData {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: DesignTokens.radiusM,
-          borderSide: const BorderSide(color: DesignTokens.primaryColor, width: 2),
+          borderSide: BorderSide(color: DesignTokens.primaryColor, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: DesignTokens.radiusM,
-          borderSide: const BorderSide(color: DesignTokens.error, width: 1),
+          borderSide: BorderSide(color: DesignTokens.error, width: 1),
         ),
-        contentPadding: const EdgeInsets.symmetric(
+        contentPadding: EdgeInsets.symmetric(
           horizontal: DesignTokens.spacingM,
           vertical: DesignTokens.spacingM,
         ),
@@ -167,7 +165,7 @@ extension ThemeExtension on ThemeData {
             horizontal: DesignTokens.spacingL,
             vertical: DesignTokens.spacingM,
           ),
-          shape: RoundedRectangleBorder(borderRadius: DesignTokens.radiusM),
+          shape: const RoundedRectangleBorder(borderRadius: DesignTokens.radiusM),
           textStyle: DesignTokens.button,
           elevation: 0,
         ),
@@ -180,7 +178,7 @@ extension ThemeExtension on ThemeData {
             horizontal: DesignTokens.spacingL,
             vertical: DesignTokens.spacingM,
           ),
-          shape: RoundedRectangleBorder(borderRadius: DesignTokens.radiusM),
+          shape: const RoundedRectangleBorder(borderRadius: DesignTokens.radiusM),
           textStyle: DesignTokens.button,
         ),
       ),

@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: DesignTokens.primaryColor.withOpacity(0.1),
+                      color: DesignTokens.primaryColor.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -99,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: DesignTokens.spacingXS),
-                Text(
+                const Text(
                   'Sign in to continue planning your events.',
                   style: TextStyle(
                     fontSize: 16,
@@ -176,18 +176,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   isLoading: _isLoading,
                 ),
                 const SizedBox(height: DesignTokens.spacingL),
-                Row(
+                const Row(
                   children: [
-                    const Expanded(child: Divider()),
+                    Expanded(child: Divider()),
                     Padding(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                           horizontal: DesignTokens.spacingM),
                       child: Text(
                         'OR',
                         style: TextStyle(color: DesignTokens.textHint),
                       ),
                     ),
-                    const Expanded(child: Divider()),
+                    Expanded(child: Divider()),
                   ],
                 ),
                 const SizedBox(height: DesignTokens.spacingL),
@@ -201,7 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
+                    const Text(
                       "Don't have an account? ",
                       style: TextStyle(color: DesignTokens.textSecondary),
                     ),

@@ -76,7 +76,7 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
                         padding: const EdgeInsets.all(DesignTokens.spacingM),
                         decoration: BoxDecoration(
                           color: !_isIncome
-                              ? DesignTokens.error.withOpacity(0.1)
+                              ? DesignTokens.error.withValues(alpha: 0.1)
                               : DesignTokens.surfaceVariant,
                           borderRadius: const BorderRadius.horizontal(
                               left: Radius.circular(12)),
@@ -116,7 +116,7 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
                         padding: const EdgeInsets.all(DesignTokens.spacingM),
                         decoration: BoxDecoration(
                           color: _isIncome
-                              ? DesignTokens.success.withOpacity(0.1)
+                              ? DesignTokens.success.withValues(alpha: 0.1)
                               : DesignTokens.surfaceVariant,
                           borderRadius: const BorderRadius.horizontal(
                               right: Radius.circular(12)),
@@ -201,7 +201,7 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
                 borderRadius: DesignTokens.radiusM,
                 child: Container(
                   padding: const EdgeInsets.all(DesignTokens.spacingM),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: DesignTokens.surfaceVariant,
                     borderRadius: DesignTokens.radiusM,
                   ),

@@ -77,7 +77,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
             ),
             const SizedBox(height: DesignTokens.spacingS),
-            Text(
+            const Text(
               'Enter your email address and we\'ll send you a reset link.',
               style: TextStyle(
                 fontSize: 16,
@@ -90,7 +90,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               Container(
                 padding: const EdgeInsets.all(DesignTokens.spacingM),
                 decoration: BoxDecoration(
-                  color: DesignTokens.success.withOpacity(0.1),
+                  color: DesignTokens.success.withValues(alpha: 0.1),
                   borderRadius: DesignTokens.radiusM,
                   border: Border.all(color: DesignTokens.success),
                 ),

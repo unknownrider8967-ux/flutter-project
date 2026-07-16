@@ -79,7 +79,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
                 const SizedBox(height: DesignTokens.spacingXS),
-                Text(
+                const Text(
                   'Start planning your events today.',
                   style: TextStyle(
                     fontSize: 16,
@@ -178,7 +178,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
+                    const Text(
                       'Already have an account? ',
                       style: TextStyle(color: DesignTokens.textSecondary),
                     ),

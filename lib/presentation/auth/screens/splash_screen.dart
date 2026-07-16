@@ -20,24 +20,19 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAuth() async {
-    await Future.delayed(const Duration(seconds: 2));
-
+    // Capture provider reference before any await — safe to use context here
     final authProvider = context.read<AuthProvider>();
+    await Future.delayed(const Duration(seconds: 2));
     final isAuthenticated = await authProvider.checkAuthStatus();
-
-    if (mounted) {
-      if (isAuthenticated) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-        );
-      }
-    }
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => isAuthenticated
+            ? const DashboardScreen()
+            : const OnboardingScreen(),
+      ),
+    );
   }
 
   @override

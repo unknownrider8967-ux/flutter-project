@@ -47,7 +47,7 @@ class SyncSphereButton extends StatelessWidget {
           foregroundColor: textColor ?? DesignTokens.primaryColor,
           side: BorderSide(color: backgroundColor ?? DesignTokens.primaryColor),
           minimumSize: Size(width ?? double.infinity, 48),
-          shape: RoundedRectangleBorder(borderRadius: DesignTokens.radiusM),
+          shape: const RoundedRectangleBorder(borderRadius: DesignTokens.radiusM),
         ),
         child: _buildChild(theme),
       );
@@ -59,7 +59,7 @@ class SyncSphereButton extends StatelessWidget {
         backgroundColor: backgroundColor ?? DesignTokens.primaryColor,
         foregroundColor: textColor ?? DesignTokens.textInverse,
         minimumSize: Size(width ?? double.infinity, 48),
-        shape: RoundedRectangleBorder(borderRadius: DesignTokens.radiusM),
+        shape: const RoundedRectangleBorder(borderRadius: DesignTokens.radiusM),
       ),
       child: _buildChild(theme),
     );
@@ -115,7 +115,7 @@ class SyncSphereCard extends StatelessWidget {
     return Card(
       margin: margin ?? const EdgeInsets.all(0),
       elevation: hasShadow ? 2 : 0,
-      shape: RoundedRectangleBorder(borderRadius: DesignTokens.radiusL),
+      shape: const RoundedRectangleBorder(borderRadius: DesignTokens.radiusL),
       child: InkWell(
         onTap: onTap,
         borderRadius: DesignTokens.radiusL,

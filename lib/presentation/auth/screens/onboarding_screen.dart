@@ -68,7 +68,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 color: Theme.of(context).scaffoldBackgroundColor,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 20,
                     offset: const Offset(0, -4),
                   ),
@@ -154,7 +154,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             width: 160,
             height: 160,
             decoration: BoxDecoration(
-              color: page.color.withOpacity(0.1),
+              color: page.color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(page.icon, size: 80, color: page.color),

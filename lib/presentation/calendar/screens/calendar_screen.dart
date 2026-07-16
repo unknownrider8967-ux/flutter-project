@@ -72,7 +72,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 shape: BoxShape.circle,
               ),
               todayDecoration: BoxDecoration(
-                color: DesignTokens.primaryLight.withOpacity(0.5),
+                color: DesignTokens.primaryLight.withValues(alpha: 0.5),
                 shape: BoxShape.circle,
               ),
               markerDecoration: const BoxDecoration(
@@ -177,7 +177,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   horizontal: DesignTokens.spacingS,
                   vertical: DesignTokens.spacingXS),
               decoration: BoxDecoration(
-                color: DesignTokens.primaryColor.withOpacity(0.1),
+                color: DesignTokens.primaryColor.withValues(alpha: 0.1),
                 borderRadius: DesignTokens.radiusS,
               ),
               child: Text(

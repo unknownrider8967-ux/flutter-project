@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 
 import 'package:syncsphere/core/theme/design_tokens.dart';
 import 'package:syncsphere/core/theme/theme_provider.dart';
@@ -273,7 +272,7 @@ void main() {
 
   group('DesignTokens', () {
     test('primary color is correct', () {
-      expect(DesignTokens.primaryColor.value, const Color(0xFF6C5CE7).value);
+      expect(DesignTokens.primaryColor.toARGB32(), const Color(0xFF6C5CE7).toARGB32());
     });
 
     test('spacing values are positive', () {

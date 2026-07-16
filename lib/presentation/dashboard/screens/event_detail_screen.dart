@@ -45,6 +45,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 ),
               );
               // Reload fresh event data
+              if (!context.mounted) return;
               final provider = context.read<EventProvider>();
               await provider.loadEvents();
               final fresh =
@@ -76,21 +77,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
   // ── header ──────────────────────────────────────────────────────────
   Widget _buildEventHeader() {
-    Color statusColor;
-    switch (_event.status) {
-      case 'published':
-        statusColor = DesignTokens.success;
-        break;
-      case 'ongoing':
-        statusColor = DesignTokens.info;
-        break;
-      case 'completed':
-        statusColor = DesignTokens.secondaryColor;
-        break;
-      default:
-        statusColor = DesignTokens.textHint;
-    }
-
     return Container(
       padding: const EdgeInsets.all(DesignTokens.spacingL),
       decoration: const BoxDecoration(
@@ -109,7 +95,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     horizontal: DesignTokens.spacingS,
                     vertical: DesignTokens.spacingXS),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: DesignTokens.radiusS,
                 ),
                 child: Text(
@@ -126,7 +112,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     horizontal: DesignTokens.spacingS,
                     vertical: DesignTokens.spacingXS),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: DesignTokens.radiusS,
                 ),
                 child: Text(
@@ -295,7 +281,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               Container(
                 padding: const EdgeInsets.all(DesignTokens.spacingS),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: color, size: 20),
@@ -332,10 +318,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               TextButton(
                 onPressed: () async {
                   Navigator.pop(ctx);
-                  await context
-                      .read<EventProvider>()
-                      .deleteEvent(_event.id!);
-                  if (mounted) Navigator.pop(context);
+                  final provider = context.read<EventProvider>();
+                  await provider.deleteEvent(_event.id!);
+                  if (context.mounted) Navigator.pop(context);
                 },
                 child: const Text('Delete',
                     style: TextStyle(color: DesignTokens.error)),

@@ -101,7 +101,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                 horizontal: DesignTokens.spacingM,
                 vertical: DesignTokens.spacingS),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: DesignTokens.radiusM,
             ),
             child: Text(
@@ -171,10 +171,6 @@ class _TimelineScreenState extends State<TimelineScreen> {
     final isLast = index == total - 1;
     final now = DateTime.now();
     final isPast = m.date.isBefore(now);
-    final isCurrent = !isPast &&
-        (index == 0 ||
-            _buildMilestones([]).isEmpty ||
-            m.date.difference(now).inDays <= 3);
 
     Color dotColor;
     if (m.isCompleted) {

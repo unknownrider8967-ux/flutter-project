@@ -47,7 +47,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                       AddEditTaskScreen(eventId: widget.eventId),
                 ),
               );
-              if (mounted) {
+              if (context.mounted) {
                 context.read<TaskProvider>().loadTasks(widget.eventId);
               }
             },
@@ -127,8 +127,10 @@ class _TaskListScreenState extends State<TaskListScreen> {
                       builder: (_) =>
                           AddEditTaskScreen(eventId: widget.eventId),
                     ),
-                  ).then((_) =>
-                      context.read<TaskProvider>().loadTasks(widget.eventId));
+                  ).then((_) {
+                    if (!context.mounted) return;
+                    context.read<TaskProvider>().loadTasks(widget.eventId);
+                  });
                 },
               ),
             )
@@ -242,7 +244,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   vertical: DesignTokens.spacingXS,
                 ),
                 decoration: BoxDecoration(
-                  color: task.priorityColor.withOpacity(0.1),
+                  color: task.priorityColor.withValues(alpha: 0.1),
                   borderRadius: DesignTokens.radiusS,
                   border: Border.all(color: task.priorityColor),
                 ),
@@ -260,15 +262,17 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 icon: const Icon(Icons.more_vert, size: 20),
                 onSelected: (value) {
                   if (value == 'edit') {
+                    final taskProvider = context.read<TaskProvider>();
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => AddEditTaskScreen(
                             task: task, eventId: widget.eventId),
                       ),
-                    ).then((_) => context
-                        .read<TaskProvider>()
-                        .loadTasks(widget.eventId));
+                    ).then((_) {
+                      if (!context.mounted) return;
+                      taskProvider.loadTasks(widget.eventId);
+                    });
                   } else if (value == 'delete') {
                     _showDeleteDialog(task.id!);
                   } else if (value.startsWith('status_')) {

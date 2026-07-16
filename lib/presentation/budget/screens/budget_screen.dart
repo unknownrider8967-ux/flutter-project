@@ -59,7 +59,7 @@ class _BudgetScreenState extends State<BudgetScreen>
                       AddEditBudgetScreen(eventId: widget.eventId),
                 ),
               );
-              if (mounted) {
+              if (context.mounted) {
                 context
                     .read<BudgetProvider>()
                     .loadBudgetEntries(widget.eventId);
@@ -151,7 +151,7 @@ class _BudgetScreenState extends State<BudgetScreen>
     return Container(
       width: 1,
       height: 36,
-      color: Colors.white.withOpacity(0.3),
+      color: Colors.white.withValues(alpha: 0.3),
     );
   }
 
@@ -166,14 +166,16 @@ class _BudgetScreenState extends State<BudgetScreen>
         actionLabel: 'Add Entry',
         icon: Icons.attach_money,
         onActionPressed: () {
+          final budgetProvider = context.read<BudgetProvider>();
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => AddEditBudgetScreen(eventId: widget.eventId),
             ),
-          ).then((_) => context
-              .read<BudgetProvider>()
-              .loadBudgetEntries(widget.eventId));
+          ).then((_) {
+            if (!context.mounted) return;
+            budgetProvider.loadBudgetEntries(widget.eventId);
+          });
         },
       );
     }
@@ -202,7 +204,7 @@ class _BudgetScreenState extends State<BudgetScreen>
             padding: const EdgeInsets.all(DesignTokens.spacingS),
             decoration: BoxDecoration(
               color: (entry.isIncome ? DesignTokens.success : DesignTokens.error)
-                  .withOpacity(0.1),
+                  .withValues(alpha: 0.1),
               borderRadius: DesignTokens.radiusS,
             ),
             child: Icon(
@@ -250,15 +252,17 @@ class _BudgetScreenState extends State<BudgetScreen>
             icon: const Icon(Icons.more_vert, size: 20),
             onSelected: (value) {
               if (value == 'edit') {
+                final budgetProvider = context.read<BudgetProvider>();
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => AddEditBudgetScreen(
                         entry: entry, eventId: widget.eventId),
                   ),
-                ).then((_) => context
-                    .read<BudgetProvider>()
-                    .loadBudgetEntries(widget.eventId));
+                ).then((_) {
+                  if (!context.mounted) return;
+                  budgetProvider.loadBudgetEntries(widget.eventId);
+                });
               } else if (value == 'delete') {
                 _showDeleteDialog(entry.id!);
               }

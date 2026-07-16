@@ -124,7 +124,7 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
                 borderRadius: DesignTokens.radiusM,
                 child: Container(
                   padding: const EdgeInsets.all(DesignTokens.spacingM),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: DesignTokens.surfaceVariant,
                     borderRadius: DesignTokens.radiusM,
                   ),

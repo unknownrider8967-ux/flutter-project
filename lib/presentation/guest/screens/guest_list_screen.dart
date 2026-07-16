@@ -54,7 +54,7 @@ class _GuestListScreenState extends State<GuestListScreen> {
                       AddEditGuestScreen(eventId: widget.eventId),
                 ),
               );
-              if (mounted) {
+              if (context.mounted) {
                 context.read<GuestProvider>().loadGuests(widget.eventId);
               }
             },
@@ -122,8 +122,10 @@ class _GuestListScreenState extends State<GuestListScreen> {
                       builder: (_) =>
                           AddEditGuestScreen(eventId: widget.eventId),
                     ),
-                  ).then((_) =>
-                      context.read<GuestProvider>().loadGuests(widget.eventId));
+                  ).then((_) {
+                    if (!context.mounted) return;
+                    context.read<GuestProvider>().loadGuests(widget.eventId);
+                  });
                 },
               ),
             )
@@ -170,7 +172,7 @@ class _GuestListScreenState extends State<GuestListScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: DesignTokens.spacingXS),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: DesignTokens.radiusS,
         ),
         child: Column(
@@ -197,7 +199,7 @@ class _GuestListScreenState extends State<GuestListScreen> {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: DesignTokens.primaryColor.withOpacity(0.1),
+            backgroundColor: DesignTokens.primaryColor.withValues(alpha: 0.1),
             child: Text(
               guest.name.isNotEmpty
                   ? guest.name[0].toUpperCase()
@@ -243,7 +245,7 @@ class _GuestListScreenState extends State<GuestListScreen> {
                   vertical: DesignTokens.spacingXS,
                 ),
                 decoration: BoxDecoration(
-                  color: guest.rsvpColor.withOpacity(0.1),
+                  color: guest.rsvpColor.withValues(alpha: 0.1),
                   borderRadius: DesignTokens.radiusS,
                   border: Border.all(color: guest.rsvpColor),
                 ),
@@ -270,14 +272,17 @@ class _GuestListScreenState extends State<GuestListScreen> {
             icon: const Icon(Icons.more_vert, size: 20),
             onSelected: (value) {
               if (value == 'edit') {
+                final guestProvider = context.read<GuestProvider>();
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => AddEditGuestScreen(
                         guest: guest, eventId: widget.eventId),
                   ),
-                ).then((_) =>
-                    context.read<GuestProvider>().loadGuests(widget.eventId));
+                ).then((_) {
+                  if (!context.mounted) return;
+                  guestProvider.loadGuests(widget.eventId);
+                });
               } else if (value == 'delete') {
                 _showDeleteDialog(guest.id!);
               } else if (value.startsWith('rsvp_')) {

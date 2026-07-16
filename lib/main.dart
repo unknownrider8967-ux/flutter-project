@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'core/theme/design_tokens.dart';
 import 'core/theme/theme_provider.dart';
 import 'data/services/database_service.dart';
 import 'data/services/seed_service.dart';

@@ -203,7 +203,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       borderRadius: DesignTokens.radiusM,
       child: Container(
         padding: const EdgeInsets.all(DesignTokens.spacingM),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: DesignTokens.surfaceVariant,
           borderRadius: DesignTokens.radiusM,
         ),

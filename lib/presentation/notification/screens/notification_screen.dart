@@ -120,7 +120,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: DesignTokens.spacingS, vertical: 2),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: DesignTokens.primaryColor,
                   borderRadius: DesignTokens.radiusXL,
                 ),
@@ -167,7 +167,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   background: Container(
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: DesignTokens.spacingL),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: DesignTokens.error,
                       borderRadius: DesignTokens.radiusL,
                     ),
@@ -190,7 +190,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               decoration: BoxDecoration(
                                 color: n.read
                                     ? DesignTokens.surfaceVariant
-                                    : n.color.withOpacity(0.1),
+                                    : n.color.withValues(alpha: 0.1),
                                 borderRadius: DesignTokens.radiusM,
                               ),
                               child: Icon(
